@@ -1,24 +1,27 @@
 #!/bin/bash
 
-set -e
+set -euo pipefail
 
-# Init lical variables
-SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-BASE_DIR="$(dirname "$SCRIPT_DIR")"
+# Determine project base directory
+BASE_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 FILE="$BASE_DIR/conf/radio.json"
 
-# Read values from JSON
-API_URL=$(jq -r '.url' "$FILE")
-AMIXER_DEV=$(jq -r '.amixer_dev' "$FILE")
-
-if [[ -z "$API_URL" || -z "$AMIXER_DEV" ]]; then
-    echo "Error: Missing values in radio.json"
-    echo "API URL: $API_URL"
-    echo "AMIXER DEV: $AMIXER_DEV"
+# Ensure config exists
+if [ ! -f "$FILE" ]; then
+    echo "Configuration file not found: $FILE"
     exit 1
 fi
 
-# Wait for ALSA device
+# Read values from JSON
+API_URL=$(jq -r '.url // empty' "$FILE")
+AMIXER_DEV=$(jq -r '.amixer_dev // empty' "$FILE")
+
+if [[ -z "$API_URL" || -z "$AMIXER_DEV" ]]; then
+    echo "Error: Missing values in radio.json"
+    exit 1
+fi
+
+# Wait for ALSA device (max 120s)
 for i in {1..120}; do
     if aplay -l | grep -q "^card"; then
         break
@@ -26,8 +29,8 @@ for i in {1..120}; do
     sleep 1
 done
 
-# Set volume to 100%
-amixer set "$AMIXER_DEV" 100% unmute
+# Set volume
+amixer set "$AMIXER_DEV" 100% unmute || true
 
 # Start radio
 exec mpv --no-video --ao=alsa --cache=yes --cache-secs=10 "$API_URL"
