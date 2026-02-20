@@ -23,6 +23,8 @@ It reads stream configuration from `conf/radio.json` and plays audio using ALSA.
 ```bash
 wget -qO- https://raw.githubusercontent.com/DandyTheWood/InternetRadioServer/refs/heads/main/install.sh | sudo bash
 
+--
+
 ## Using curl
 ```bash
 curl -fsSL https://raw.githubusercontent.com/DandyTheWood/InternetRadioServer/refs/heads/main/install.sh | sudo bash
