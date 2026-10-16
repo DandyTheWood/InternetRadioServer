@@ -1,0 +1,6 @@
+{
+  "station_name": "RadioX-MAIN",
+  "stream_url": "https://api.radiox.sk/radiox_128.mp3",
+  "volume": 70,
+  "amixer_dev": "Master"
+}
