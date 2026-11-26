@@ -13,6 +13,13 @@ AMIXER_DEV="$(jq -r '.amixer_dev // empty' "$CONFIG")"
 
 [ -n "$STREAM_URL" ] || { echo "ERROR: no stream_url in $CONFIG"; exit 1; }
 
+# If the user has a running session (PipeWire/PulseAudio), let mpv use it;
+# otherwise mpv falls back to plain ALSA
+RUNTIME_DIR="/run/user/$(id -u)"
+if [ -z "${XDG_RUNTIME_DIR:-}" ] && [ -d "$RUNTIME_DIR" ]; then
+    export XDG_RUNTIME_DIR="$RUNTIME_DIR"
+fi
+
 # Wait up to 120 s for a sound card (useful right after boot)
 for _ in $(seq 1 120); do
     aplay -l 2>/dev/null | grep -q '^card' && break
@@ -28,7 +35,7 @@ echo "Station: $STATION_NAME"
 echo "Stream : $STREAM_URL"
 echo "Volume : $VOLUME%"
 
-# If the network is not ready, mpv exits and systemd restarts it after 5 s
+# If the network is not ready, mpv exits and the service manager restarts it after 5 s
 exec mpv --no-video --no-terminal --audio-display=no \
     --volume="$VOLUME" --network-timeout=15 \
     --cache=yes --cache-secs=10 \
